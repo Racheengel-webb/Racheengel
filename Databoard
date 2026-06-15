@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Code Portfolio</title>
+<style>
+  :root {
+    --bg: #0d1117; --bg2: #161b22; --bg3: #1e2733;
+    --steel: #4a90c4; --steel2: #6db3e8; --steel3: #2a5f8a;
+    --text: #e6edf3; --muted: #8b949e; --border: #30363d;
+    --green: #3fb950; --red: #f85149; --font: 'Courier New', monospace;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--text); font-family: 'Segoe UI', sans-serif; min-height: 100vh; }
+
+  header {
+    background: linear-gradient(135deg, var(--bg), var(--bg2));
+    border-bottom: 1px solid var(--border);
+    padding: 0 2rem; position: sticky; top: 0; z-index: 100;
+    display: flex; align-items: center; height: 60px;
+  }
+  .logo { font-family: var(--font); font-size: 1.2rem; color: var(--steel2); letter-spacing: 2px; }
+  .logo span { color: var(--muted); }
+
+  .hero {
+    text-align: center; padding: 4rem 2rem 3rem;
+    background: radial-gradient(ellipse at 50% 0%, rgba(74,144,196,0.12) 0%, transparent 70%);
+    border-bottom: 1px solid var(--border); position: relative; overflow: hidden;
+  }
+  .hero::before {
+    content: ''; position: absolute; inset: 0;
+    background-image: repeating-linear-gradient(0deg, transparent, transparent 40px, rgba(74,144,196,0.04) 40px, rgba(74,144,196,0.04) 41px),
+                      repeating-linear-gradient(90deg, transparent, transparent 40px, rgba(74,144,196,0.04) 40px, rgba(74,144,196,0.04) 41px);
+    pointer-events: none;
+  }
+  .hero h1 { font-size: 2.5rem; font-weight: 700; letter-spacing: 3px; margin-bottom: .5rem; }
+  .hero h1 span { color: var(--steel2); }
+  .hero p { color: var(--muted); font-family: var(--font); font-size: .95rem; }
+  .stats { display: flex; justify-content: center; gap: 2.5rem; margin-top: 2rem; }
+  .stat-num { font-size: 1.6rem; font-weight: 700; color: var(--steel2); font-family: var(--font); }
+  .stat-label { font-size: .75rem; color: var(--muted); letter-spacing: 1px; margin-top: 2px; }
+
+  main { max-width: 1100px; margin: 0 auto; padding: 2rem; }
+
+  .upload-zone {
+    border: 2px dashed var(--steel3); border-radius: 12px; padding: 2.5rem;
+    text-align: center; cursor: pointer; background: var(--bg2);
+    transition: all .25s; margin-bottom: 2rem;
+  }
+  .upload-zone:hover, .upload-zone.drag { border-color: var(--steel2); background: var(--bg3); }
+  .upload-zone .icon { font-size: 2.5rem; margin-bottom: .75rem; }
+  .upload-zone h3 { color: var(--steel2); margin-bottom: .4rem; }
+  .upload-zone p { color: var(--muted); font-size: .85rem; }
+  .upload-zone input { display: none; }
+  .upload-btn {
+    display: inline-block; margin-top: 1rem; background: var(--steel3);
+    color: var(--steel2); border: 1px solid var(--steel); padding: .5rem 1.4rem;
+    border-radius: 6px; cursor: pointer; font-size: .9rem; transition: all .2s;
+  }
+  .upload-btn:hover { background: var(--steel); color: #fff; }
+
+  .toolbar { display: flex; align-items: center; gap: .6rem; margin-bottom: 1.5rem; flex-wrap: wrap; }
+  .toolbar h2 { font-size: 1rem; color: var(--muted); font-family: var(--font); margin-right: auto; }
+  .filter-btn {
+    background: var(--bg2); border: 1px solid var(--border); color: var(--muted);
+    padding: .3rem .85rem; border-radius: 20px; cursor: pointer; font-size: .8rem; transition: all .2s;
+  }
+  .filter-btn.active, .filter-btn:hover { background: var(--steel3); border-color: var(--steel); color: var(--steel2); }
+
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 1.2rem; }
+
+  .card {
+    background: var(--bg2); border: 1px solid var(--border); border-radius: 10px;
+    overflow: hidden; cursor: pointer; transition: transform .2s, border-color .2s, box-shadow .2s;
+  }
+  .card:hover { transform: translateY(-3px); border-color: var(--steel); box-shadow: 0 4px 24px rgba(74,144,196,0.15); }
+  .card-header { padding: 1rem 1.2rem .7rem; display: flex; align-items: center; gap: .75rem; }
+  .lang-badge { font-family: var(--font); font-size: .7rem; padding: .2rem .6rem; border-radius: 4px; font-weight: 700; letter-spacing: 1px; white-space: nowrap; }
+  .card-title { font-weight: 600; font-size: 1rem; flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .card-preview {
+    font-family: var(--font); font-size: .75rem; color: var(--muted);
+    background: var(--bg); padding: .75rem 1.2rem; line-height: 1.6;
+    height: 80px; overflow: hidden; white-space: pre; position: relative;
+  }
+  .card-preview::after { content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 30px; background: linear-gradient(transparent, var(--bg)); }
+  .card-footer { padding: .7rem 1.2rem; display: flex; align-items: center; justify-content: space-between; border-top: 1px solid var(--border); }
+  .card-meta { font-size: .75rem; color: var(--muted); }
+  .card-actions { display: flex; gap: .5rem; }
+  .btn-sm {
+    background: none; border: 1px solid var(--border); color: var(--muted);
+    padding: .2rem .6rem; border-radius: 4px; cursor: pointer; font-size: .75rem; transition: all .2s;
+  }
+  .btn-sm:hover { border-color: var(--steel); color: var(--steel2); }
+  .btn-sm.run { border-color: var(--green); color: var(--green); }
+  .btn-sm.run:hover { background: rgba(63,185,80,.15); }
+  .btn-sm.danger:hover { border-color: var(--red); color: var(--red); }
+
+  .empty { text-align: center; padding: 4rem; color: var(--muted); }
+  .empty .icon { font-size: 3rem; margin-bottom: 1rem; opacity: .4; }
+
+  /* MODAL */
+  .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.75); z-index: 1000; align-items: center; justify-content: center; padding: 1rem; }
+  .modal-overlay.open { display: flex; }
+  .modal { background: var(--bg2); border: 1px solid var(--border); border-radius: 12px; width: 100%; max-width: 860px; max-height: 90vh; display: flex; flex-direction: column; }
+  .modal-head { padding: 1rem 1.4rem; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: .75rem; }
+  .modal-head h3 { flex: 1; font-size: 1.05rem; }
+  .modal-tabs { display: flex; gap: .4rem; }
+  .tab-btn { background: none; border: 1px solid var(--border); color: var(--muted); padding: .3rem .8rem; border-radius: 6px; cursor: pointer; font-size: .82rem; transition: all .2s; }
+  .tab-btn.active { background: var(--steel3); border-color: var(--steel); color: var(--steel2); }
+  .tab-btn.run-tab { border-color: var(--green); color: var(--green); }
+  .tab-btn.run-tab.active { background: rgba(63,185,80,.15); }
+  .modal-close { background: none; border: none; color: var(--muted); cursor: pointer; font-size: 1.4rem; line-height: 1; }
+  .modal-close:hover { color: var(--text); }
+  .modal-body { flex: 1; overflow: auto; }
+  .tab-panel { display: none; }
+  .tab-panel.active { display: block; }
+  .code-block { font-family: var(--font); font-size: .82rem; line-height: 1.7; background: var(--bg); padding: 1.4rem; white-space: pre-wrap; word-break: break-all; color: #cdd9e5; min-height: 200px; }
+  
+  /* RUN PANEL */
+  .run-panel { padding: 1.2rem; }
+  .run-info { background: var(--bg3); border: 1px solid var(--border); border-radius: 8px; padding: .8rem 1rem; font-size: .82rem; color: var(--muted); margin-bottom: 1rem; display: flex; align-items: center; gap: .6rem; }
+  .run-info .badge { background: rgba(63,185,80,.15); color: var(--green); border: 1px solid var(--green); padding: .15rem .5rem; border-radius: 4px; font-size: .72rem; font-family: var(--font); }
+  .output-box { background: var(--bg); border: 1px solid var(--border); border-radius: 8px; min-height: 200px; padding: 1.2rem; font-family: var(--font); font-size: .82rem; line-height: 1.7; position: relative; }
+  .output-placeholder { color: var(--muted); font-style: italic; }
+  .output-text { color: #cdd9e5; white-space: pre-wrap; }
+  .output-error { color: var(--red); white-space: pre-wrap; }
+  .output-html iframe { width: 100%; height: 380px; border: none; border-radius: 6px; background: #fff; }
+  .spinner { display: inline-block; width: 14px; height: 14px; border: 2px solid var(--border); border-top-color: var(--steel2); border-radius: 50%; animation: spin .7s linear infinite; vertical-align: middle; margin-right: .5rem; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .run-btn-big {
+    display: flex; align-items: center; gap: .5rem; justify-content: center;
+    background: rgba(63,185,80,.1); border: 1px solid var(--green); color: var(--green);
+    padding: .55rem 1.4rem; border-radius: 8px; cursor: pointer; font-size: .9rem;
+    margin-bottom: 1rem; transition: all .2s; width: 100%;
+  }
+  .run-btn-big:hover { background: rgba(63,185,80,.2); }
+  .run-btn-big:disabled { opacity: .5; cursor: not-allowed; }
+
+  /* HTML preview label */
+  .preview-label { font-size: .75rem; color: var(--muted); margin-bottom: .6rem; font-family: var(--font); }
+
+  .modal-foot { padding: .8rem 1.4rem; border-top: 1px solid var(--border); display: flex; gap: .6rem; justify-content: flex-end; }
+  .btn { padding: .45rem 1.1rem; border-radius: 6px; cursor: pointer; font-size: .85rem; border: 1px solid; transition: all .2s; font-family: inherit; }
+  .btn-primary { background: var(--steel3); border-color: var(--steel); color: var(--steel2); }
+  .btn-primary:hover { background: var(--steel); color: #fff; }
+  .btn-ghost { background: none; border-color: var(--border); color: var(--muted); }
+  .btn-ghost:hover { border-color: var(--steel); color: var(--steel2); }
+
+  .toast { position: fixed; bottom: 1.5rem; right: 1.5rem; background: var(--bg3); border: 1px solid var(--steel); color: var(--steel2); padding: .7rem 1.2rem; border-radius: 8px; font-size: .85rem; z-index: 9999; transform: translateY(80px); opacity: 0; transition: all .3s; }
+  .toast.show { transform: translateY(0); opacity: 1; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">&lt;<span>/</span>code-portfolio<span>&gt;</span></div>
+</header>
+
+<div class="hero">
+  <h1>Mein <span>Code</span> Portfolio</h1>
+  <p>// Meine Programme, Skripte & Snippets</p>
+  <div class="stats">
+    <div class="stat"><div class="stat-num" id="total-count">0</div><div class="stat-label">PROJEKTE</div></div>
+    <div class="stat"><div class="stat-num" id="lang-count">0</div><div class="stat-label">SPRACHEN</div></div>
+  </div>
+</div>
+
+<main>
+  <div class="upload-zone" id="dropzone">
+    <div class="icon">📂</div>
+    <h3>Code hochladen</h3>
+    <p>Ziehe Dateien hier rein oder klicke zum Auswählen</p>
+    <p style="margin-top:.3rem;font-size:.75rem;color:var(--muted)">Unterstützt: .py .js .html .css .java .cpp .c .go .rs .sh usw.</p>
+    <label class="upload-btn">📁 Datei wählen<input type="file" id="file-input" multiple></label>
+  </div>
+
+  <div class="toolbar">
+    <h2>// Projekte</h2>
+    <button class="filter-btn active" onclick="filterLang('all',this)">Alle</button>
+  </div>
+
+  <div class="grid" id="grid">
+    <div class="empty" id="empty-state">
+      <div class="icon">🗂️</div>
+      <p>Noch keine Dateien hochgeladen.</p>
+      <p style="margin-top:.4rem;font-size:.8rem">Lade deinen ersten Code hoch!</p>
+    </div>
+  </div>
+</main>
+
+<!-- MODAL -->
+<div class="modal-overlay" id="modal">
+  <div class="modal">
+    <div class="modal-head">
+      <span class="lang-badge" id="modal-badge"></span>
+      <h3 id="modal-title"></h3>
+      <div class="modal-tabs">
+        <button class="tab-btn active" onclick="switchTab('code')">📄 Code</button>
+        <button class="tab-btn run-tab" onclick="switchTab('run')" id="run-tab-btn">▶ Ausführen</button>
+      </div>
+      <button class="modal-close" onclick="closeModal()">×</button>
+    </div>
+    <div class="modal-body">
+      <!-- CODE TAB -->
+      <div class="tab-panel active" id="tab-code">
+        <pre class="code-block" id="modal-code"></pre>
+      </div>
+      <!-- RUN TAB -->
+      <div class="tab-panel" id="tab-run">
+        <div class="run-panel">
+          <div class="run-info">
+            <span>Modus:</span>
+            <span class="badge" id="run-mode-badge">—</span>
+            <span id="run-mode-desc" style="flex:1"></span>
+          </div>
+          <button class="run-btn-big" id="run-btn" onclick="runCode()">▶ Jetzt ausführen</button>
+          <div class="output-box" id="output-box">
+            <span class="output-placeholder">// Output erscheint hier nach dem Ausführen...</span>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" onclick="closeModal()">Schließen</button>
+      <button class="btn btn-primary" onclick="copyCode()">📋 Code kopieren</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const LANG_COLORS = {
+  py:   { bg:'#1a3a2a', color:'#3fb950', label:'Python' },
+  js:   { bg:'#3a2e00', color:'#d29922', label:'JavaScript' },
+  ts:   { bg:'#1a2a3a', color:'#4a90c4', label:'TypeScript' },
+  html: { bg:'#3a1a10', color:'#f0883e', label:'HTML' },
+  css:  { bg:'#1a1a3a', color:'#7c8ef7', label:'CSS' },
+  java: { bg:'#2a1a0e', color:'#e57c3b', label:'Java' },
+  cpp:  { bg:'#2a0e2a', color:'#b47fe8', label:'C++' },
+  c:    { bg:'#2a0e2a', color:'#b47fe8', label:'C' },
+  cs:   { bg:'#0e2a1a', color:'#3fb950', label:'C#' },
+  php:  { bg:'#1a1a3a', color:'#7c8ef7', label:'PHP' },
+  go:   { bg:'#0e2a2a', color:'#39c5cf', label:'Go' },
+  rs:   { bg:'#2a1a0e', color:'#e57c3b', label:'Rust' },
+  sh:   { bg:'#1a2a1a', color:'#56d364', label:'Shell' },
+  txt:  { bg:'#1a1a1a', color:'#8b949e', label:'Text' },
+};
+function getLangInfo(ext) {
+  return LANG_COLORS[ext.toLowerCase()] || { bg:'#1a2a3a', color:'#4a90c4', label: ext.toUpperCase() };
+}
+
+let projects = [], activeFilter = 'all', currentProject = null;
+
+async function save() { try { await window.storage.set('projects', JSON.stringify(projects)); } catch(e) {} }
+async function load() {
+  try { const r = await window.storage.get('projects'); if (r) projects = JSON.parse(r.value); } catch(e) { projects = []; }
+  render();
+}
+
+// UPLOAD
+document.getElementById('file-input').addEventListener('change', e => handleFiles(e.target.files));
+const dz = document.getElementById('dropzone');
+dz.addEventListener('dragover', e => { e.preventDefault(); dz.classList.add('drag'); });
+dz.addEventListener('dragleave', () => dz.classList.remove('drag'));
+dz.addEventListener('drop', e => { e.preventDefault(); dz.classList.remove('drag'); handleFiles(e.dataTransfer.files); });
+
+function handleFiles(files) {
+  [...files].forEach(f => {
+    const ext = f.name.split('.').pop().toLowerCase();
+    const r = new FileReader();
+    r.onload = ev => {
+      projects.unshift({ id: Date.now() + Math.random(), name: f.name, ext, content: ev.target.result, date: new Date().toLocaleDateString('de-CH') });
+      save(); render(); showToast(`✅ "${f.name}" hochgeladen`);
+    };
+    r.readAsText(f);
+  });
+}
+
+function render() {
+  const langs = [...new Set(projects.map(p => p.ext))];
+  updateFilters(langs);
+  const filtered = activeFilter === 'all' ? projects : projects.filter(p => p.ext === activeFilter);
+  document.getElementById('total-count').textContent = projects.length;
+  document.getElementById('lang-count').textContent = langs.length;
+  const grid = document.getElementById('grid');
+  const empty = document.getElementById('empty-state');
+  if (projects.length === 0) { empty.style.display = ''; grid.innerHTML = ''; grid.appendChild(empty); return; }
+  empty.style.display = 'none';
+  grid.innerHTML = filtered.map(p => {
+    const lang = getLangInfo(p.ext);
+    const preview = (p.content||'').slice(0,300).replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    return `<div class="card" onclick="openModal('${p.id}')">
+      <div class="card-header">
+        <span class="lang-badge" style="background:${lang.bg};color:${lang.color}">${lang.label}</span>
+        <span class="card-title">${p.name}</span>
+      </div>
+      <div class="card-preview">${preview}</div>
+      <div class="card-footer">
+        <span class="card-meta">📅 ${p.date} · ${formatSize(p.content)}</span>
+        <div class="card-actions">
+          <button class="btn-sm run" title="Ausführen" onclick="event.stopPropagation();openModal('${p.id}',true)">▶</button>
+          <button class="btn-sm" onclick="event.stopPropagation();copyById('${p.id}')">📋</button>
+          <button class="btn-sm danger" onclick="event.stopPropagation();deleteById('${p.id}')">🗑️</button>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function formatSize(s) { const b = new Blob([s||'']).size; return b<1024?b+'B':(b/1024).toFixed(1)+'KB'; }
+
+function updateFilters(langs) {
+  const tb = document.querySelector('.toolbar');
+  const existing = [...tb.querySelectorAll('.filter-btn')].map(b => b.dataset.lang);
+  langs.forEach(l => {
+    if (!existing.includes(l)) {
+      const b = document.createElement('button');
+      b.className = 'filter-btn'; b.dataset.lang = l;
+      b.textContent = getLangInfo(l).label;
+      b.onclick = function(){ filterLang(l,this); };
+      tb.appendChild(b);
+    }
+  });
+}
+
+function filterLang(lang, el) {
+  activeFilter = lang;
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  el.classList.add('active');
+  render();
+}
+
+// MODAL
+function openModal(id, autoRun=false) {
+  const p = projects.find(x => x.id == id);
+  if (!p) return;
+  currentProject = p;
+  const lang = getLangInfo(p.ext);
+  document.getElementById('modal-title').textContent = p.name;
+  const badge = document.getElementById('modal-badge');
+  badge.textContent = lang.label; badge.style.background = lang.bg; badge.style.color = lang.color;
+  document.getElementById('modal-code').textContent = p.content || '';
+  // Reset run panel
+  document.getElementById('output-box').innerHTML = '<span class="output-placeholder">// Output erscheint hier nach dem Ausführen...</span>';
+  document.getElementById('run-btn').disabled = false;
+  // Set mode info
+  const isHTML = ['html','htm'].includes(p.ext);
+  const isJS = ['js','ts'].includes(p.ext);
+  if (isHTML) {
+    document.getElementById('run-mode-badge').textContent = 'Live Preview';
+    document.getElementById('run-mode-desc').textContent = 'HTML wird direkt im Browser gerendert';
+  } else if (isJS) {
+    document.getElementById('run-mode-badge').textContent = 'Browser JS';
+    document.getElementById('run-mode-desc').textContent = 'JavaScript wird im Browser ausgeführt';
+  } else {
+    document.getElementById('run-mode-badge').textContent = 'KI-Simulation';
+    document.getElementById('run-mode-desc').textContent = 'Claude analysiert & simuliert den Output';
+  }
+  document.getElementById('modal').classList.add('open');
+  if (autoRun) switchTab('run');
+  else switchTab('code');
+}
+
+function closeModal() {
+  document.getElementById('modal').classList.remove('open');
+  currentProject = null;
+}
+document.getElementById('modal').addEventListener('click', e => { if (e.target===e.currentTarget) closeModal(); });
+
+function switchTab(tab) {
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('tab-'+tab).classList.add('active');
+  if (tab==='run') document.getElementById('run-tab-btn').classList.add('active');
+  else document.querySelectorAll('.tab-btn')[0].classList.add('active');
+}
+
+// RUN
+async function runCode() {
+  if (!currentProject) return;
+  const p = currentProject;
+  const ext = p.ext.toLowerCase();
+  const btn = document.getElementById('run-btn');
+  const out = document.getElementById('output-box');
+  btn.disabled = true;
+
+  // HTML – live preview
+  if (['html','htm'].includes(ext)) {
+    out.innerHTML = `<div class="preview-label">// Live Preview</div><div class="output-html"><iframe srcdoc="${encodeIframe(p.content)}"></iframe></div>`;
+    btn.disabled = false;
+    return;
+  }
+
+  // JS – run in browser
+  if (ext === 'js') {
+    const logs = [];
+    const origLog = console.log, origErr = console.error;
+    console.log = (...a) => { logs.push(a.map(String).join(' ')); origLog(...a); };
+    console.error = (...a) => { logs.push('ERROR: '+a.map(String).join(' ')); origErr(...a); };
+    try {
+      // eslint-disable-next-line no-new-func
+      new Function(p.content)();
+    } catch(e) { logs.push('ERROR: '+e.message); }
+    console.log = origLog; console.error = origErr;
+    out.innerHTML = logs.length
+      ? `<span class="output-text">${escHtml(logs.join('\n'))}</span>`
+      : `<span class="output-placeholder">// Kein Output (kein console.log gefunden)</span>`;
+    btn.disabled = false;
+    return;
+  }
+
+  // All others – Claude AI simulation
+  out.innerHTML = `<span class="spinner"></span><span style="color:var(--muted)">Claude analysiert den Code...</span>`;
+  try {
+    const lang = getLangInfo(ext).label;
+    const resp = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-6',
+        max_tokens: 1000,
+        messages: [{
+          role: 'user',
+          content: `Du bist ein Code-Interpreter. Analysiere diesen ${lang}-Code und simuliere den erwarteten Terminal-Output so realistisch wie möglich. Gib NUR den reinen Output aus, keine Erklärungen, keine Markdown-Formatierung, keine Backticks. Wenn der Code einen Fehler hat, zeige die Fehlermeldung wie ein echter Interpreter.\n\nCode:\n${p.content}`
+        }]
+      })
+    });
+    const data = await resp.json();
+    const text = (data.content||[]).map(i=>i.text||'').join('');
+    out.innerHTML = `<span class="output-text">${escHtml(text)}</span>`;
+  } catch(e) {
+    out.innerHTML = `<span class="output-error">Fehler beim Ausführen: ${e.message}</span>`;
+  }
+  btn.disabled = false;
+}
+
+function encodeIframe(html) { return html.replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
+function escHtml(s) { return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+function copyCode() { if (currentProject) { navigator.clipboard.writeText(currentProject.content||''); showToast('📋 Code kopiert!'); } }
+function copyById(id) { const p = projects.find(x=>x.id==id); if(p){navigator.clipboard.writeText(p.content||'');showToast('📋 Kopiert!');} }
+function deleteById(id) {
+  const p = projects.find(x=>x.id==id); if(!p) return;
+  if(confirm(`"${p.name}" wirklich löschen?`)){projects=projects.filter(x=>x.id!=id);save();render();showToast(`🗑️ "${p.name}" gelöscht`);}
+}
+function showToast(msg) {
+  const t = document.getElementById('toast'); t.textContent = msg; t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),2500);
+}
+
+load();
+</script>
+</body>
+</html>
